@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello from Electron</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello from Electron</h1>
+    <button id="myButton">Go to Product List</button>
+
+    <script>
+        const button = document.getElementById('myButton');
+        button.addEventListener('click', () => {
+            window.location.href = 'second-page.html';
+        });
+    </script>
+</body>
+</html>
