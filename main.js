@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
-const path = require('path')
 const axios = require('axios')
+const cheerio = require('cheerio')
 
 let mainWindow
 
@@ -36,17 +36,22 @@ app.on('activate', () => {
 })
 
 // Handle API request from renderer process
-ipcMain.handle('fetch-products', async () => {
-  const url = "https://fakestoreapi.com/products"
+ipcMain.handle('fetch-cars', async () => {
+  const url = "https://www.autoscout24.es/lst/tesla?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&priceto=100000&search_id=1zjmj03vo4p&sort=mileage&source=homepage_search-mask&ustate=N%2CU";
   try {
-    const response = await axios.get(url)
-    if (response.status === 200) {
-      return response.data
-    } else {
-      throw new Error(`Error: ${response.status}`)
-    }
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+    const cars = [];
+
+    $('.ListItem_article__qyYw7').each((index, element) => {
+      const title = $(element).find('.ListItem_title__ndA4s').text().trim();
+      const price = $(element).find('.Price_price__APlgs').text().trim();
+      cars.push({ title, price });
+    });
+
+    return cars;
   } catch (error) {
-    console.error('Error fetching products:', error)
-    return []
+    console.error('Error fetching cars:', error);
+    return [];
   }
-})
+});

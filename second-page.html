@@ -57,20 +57,26 @@
         fetchButton.addEventListener('click', async () => {
             fetchButton.disabled = true;
             fetchButton.textContent = 'Fetching...';
-            const products = await ipcRenderer.invoke('fetch-products');
+            const cars = await ipcRenderer.invoke('fetch-cars');
+            console.log(cars); // Log the cars data to see what is being received
             productTableBody.innerHTML = '';
-            products.forEach(product => {
+            cars.forEach(car => {
                 const row = document.createElement('tr');
                 const titleCell = document.createElement('td');
                 const priceCell = document.createElement('td');
-                titleCell.textContent = product.title;
-                priceCell.textContent = `$${product.price}`;
+                titleCell.textContent = car.title;
+                // Format the price by removing extra characters and moving the euro sign
+                let formattedPrice = car.price.replace('€', '').trim(); // Remove the euro sign
+                formattedPrice = formattedPrice.replace(/[-,]$/g, '').trim(); // Remove the trailing comma and dash
+                formattedPrice = formattedPrice.replace(',', ''); // Remove any commas within the number
+                formattedPrice += ' €'; // Append the euro sign at the end
+                priceCell.textContent = formattedPrice;
                 row.appendChild(titleCell);
                 row.appendChild(priceCell);
                 productTableBody.appendChild(row);
             });
             fetchButton.disabled = false;
-            fetchButton.textContent = 'Fetch Products';
+            fetchButton.textContent = 'Fetch Cars'; // Changed text to reflect fetching cars
         });
 
         backButton.addEventListener('click', () => {
