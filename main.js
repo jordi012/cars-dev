@@ -37,7 +37,8 @@ app.on('activate', () => {
 
 // Handle API request from renderer process
 ipcMain.handle('fetch-cars', async () => {
-  const url = "https://www.autoscout24.es/lst/tesla?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&priceto=100000&search_id=1zjmj03vo4p&sort=mileage&source=homepage_search-mask&ustate=N%2CU";
+  const baseUrl = "https://www.autoscout24.es"; // Base URL for the site
+  const url = "https://www.autoscout24.es/lst/tesla?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&pricefrom=50000&search_id=19ogo8d56lf&sort=price&source=homepage_search-mask&ustate=N%2CU";
   try {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
@@ -46,7 +47,12 @@ ipcMain.handle('fetch-cars', async () => {
     $('.ListItem_article__qyYw7').each((index, element) => {
       const title = $(element).find('.ListItem_title__ndA4s').text().trim();
       const price = $(element).find('.Price_price__APlgs').text().trim();
-      cars.push({ title, price });
+      let carUrl = $(element).find('a').attr('href'); // Fetch the URL
+      if (carUrl && !carUrl.startsWith('http')) {
+        carUrl = baseUrl + carUrl; // Prepend base URL if necessary
+      }
+      console.log(carUrl); // Log the URL to verify it's correct
+      cars.push({ title, price, url: carUrl });
     });
 
     return cars;

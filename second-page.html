@@ -40,6 +40,7 @@
             <tr>
                 <th>Title</th>
                 <th>Price</th>
+                <th>Url</th> <!-- New column for URL -->
             </tr>
         </thead>
         <tbody>
@@ -64,6 +65,8 @@
                 const row = document.createElement('tr');
                 const titleCell = document.createElement('td');
                 const priceCell = document.createElement('td');
+                const urlCell = document.createElement('td'); // Cell for URL
+
                 titleCell.textContent = car.title;
                 // Format the price by removing extra characters and moving the euro sign
                 let formattedPrice = car.price.replace('€', '').trim(); // Remove the euro sign
@@ -71,8 +74,17 @@
                 formattedPrice = formattedPrice.replace(',', ''); // Remove any commas within the number
                 formattedPrice += ' €'; // Append the euro sign at the end
                 priceCell.textContent = formattedPrice;
+
+                // Create an anchor element for the URL
+                const link = document.createElement('a');
+                link.href = car.url; // Set the href attribute to the URL
+                link.textContent = 'View Car'; // Text to display in the link
+                link.target = '_blank'; // Open in a new tab
+                urlCell.appendChild(link); // Append the link to the URL cell
+
                 row.appendChild(titleCell);
                 row.appendChild(priceCell);
+                row.appendChild(urlCell); // Append the new URL cell to the row
                 productTableBody.appendChild(row);
             });
             fetchButton.disabled = false;
