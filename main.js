@@ -36,28 +36,31 @@ app.on('activate', () => {
 })
 
 // Handle API request from renderer process
-ipcMain.handle('fetch-cars', async () => {
-  const baseUrl = "https://www.autoscout24.es"; // Base URL for the site
-  const url = "https://www.autoscout24.es/lst/tesla?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&pricefrom=50000&search_id=19ogo8d56lf&sort=price&source=homepage_search-mask&ustate=N%2CU";
+ipcMain.handle('fetch-cars', async (event, query, page) => {
+  const baseUrl = "https://www.autoscout24.es";
+  const fullUrl = `${baseUrl}${query}&page=${page}`;
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(fullUrl);
     const $ = cheerio.load(response.data);
     const cars = [];
 
     $('.ListItem_article__qyYw7').each((index, element) => {
       const title = $(element).find('.ListItem_title__ndA4s').text().trim();
       const price = $(element).find('.Price_price__APlgs').text().trim();
-      let carUrl = $(element).find('a').attr('href'); // Fetch the URL
+      let carUrl = $(element).find('a').attr('href');
       if (carUrl && !carUrl.startsWith('http')) {
-        carUrl = baseUrl + carUrl; // Prepend base URL if necessary
+        carUrl = baseUrl + carUrl;
       }
-      console.log(carUrl); // Log the URL to verify it's correct
       cars.push({ title, price, url: carUrl });
     });
 
-    return cars;
+    // Extract total pages from pagination
+    const totalPagesElement = $('.pagination-item--page-indicator span').text();
+    const totalPages = parseInt(totalPagesElement.split('/')[1].trim()) || 1;
+
+    return { cars, totalPages, currentPage: page };
   } catch (error) {
     console.error('Error fetching cars:', error);
-    return [];
+    return { cars: [], totalPages: 0, currentPage: page };
   }
 });
