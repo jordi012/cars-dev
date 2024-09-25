@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Hello from Electron</title>
+    <title>Cars Scraper</title>
     <style>
         body {
             display: flex;
@@ -12,24 +12,54 @@
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            font-size: 24px;
+            background-color: #f0f8ff;
         }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+        .button-container {
+            display: flex;
+            gap: 20px;
+        }
+        .scrape-button {
+            padding: 15px 30px;
             font-size: 18px;
             cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .scrape-button:hover {
+            background-color: #555;
         }
     </style>
 </head>
 <body>
-    <h1>Hello from Electron</h1>
-    <button id="myButton">Go to Product List</button>
+    <h1>Cars Scraper</h1>
+    <p>Scrape car listings from popular websites</p>
+    <div class="button-container">
+        <button id="autoScout24Button" class="scrape-button">Scrape AutoScout24</button>
+        <button id="cochesNetButton" class="scrape-button">Scrape Coches.net</button>
+    </div>
 
     <script>
-        const button = document.getElementById('myButton');
-        button.addEventListener('click', () => {
+        const autoScout24Button = document.getElementById('autoScout24Button');
+        const cochesNetButton = document.getElementById('cochesNetButton');
+
+        autoScout24Button.addEventListener('click', () => {
             window.location.href = 'second-page.html';
+        });
+
+        cochesNetButton.addEventListener('click', () => {
+            window.location.href = 'third-page.html';
         });
     </script>
 </body>

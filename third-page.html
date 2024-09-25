@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Second Page - Car List</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 80%;
+            max-width: 600px;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .search-section {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            align-items: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Car List</h1>
+    <div class="search-section">
+        <input type="text" id="carMake" placeholder="Enter car make">
+        <input type="number" id="minPrice" placeholder="Min price (€)">
+        <input type="number" id="maxPrice" placeholder="Max price (€)">
+        <button id="fetchButton">Fetch Cars</button>
+        <button id="cancelButton" style="display: none;">Cancel Fetch</button>
+    </div>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <div class="pagination">
+        <button id="prevButton">Previous</button>
+        <span id="pageIndicator">Page 1 of 0</span>
+        <button id="nextButton">Next</button>
+    </div>
+    <button id="backButton">Go Back</button>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        let currentPage = 1;
+        let totalPages = 0;
+        let allCars = [];
+        const itemsPerPage = 20;
+        let isFetching = false;
+        let abortController = null;
+
+        const fetchButton = document.getElementById('fetchButton');
+        const cancelButton = document.getElementById('cancelButton');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        const pageIndicator = document.getElementById('pageIndicator');
+        const productTableBody = document.querySelector('#productTable tbody');
+
+        async function fetchAllCars(isNewSearch = false) {
+            if (isFetching) return;
+            isFetching = true;
+            abortController = new AbortController();
+
+            fetchButton.style.display = 'none';
+            cancelButton.style.display = 'inline-block';
+
+            if (isNewSearch) {
+                allCars = [];
+                currentPage = 1;
+                totalPages = 0;
+            }
+
+            const carMake = document.getElementById('carMake').value;
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            const query = `/lst/${carMake}?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&pricefrom=${minPrice}&priceto=${maxPrice}&search_id=1w1487tfnfp&sort=price&source=homepage_search-mask&ustate=N%2CU&limit=${itemsPerPage}`;
+
+            try {
+                while (currentPage <= totalPages || totalPages === 0) {
+                    const result = await ipcRenderer.invoke('fetch-cars', query, currentPage, abortController.signal);
+                    console.log("Received result:", result);
+
+                    if (result && result.cars && Array.isArray(result.cars)) {
+                        allCars = allCars.concat(result.cars);
+                        totalPages = result.totalPages;
+                        currentPage = result.currentPage;
+                        displayCars();
+                        updatePageIndicator();
+
+                        if (currentPage >= totalPages) break;
+                        currentPage++;
+                    } else {
+                        console.error('Cars data is missing, undefined, or not an array in the response:', result);
+                        break;
+                    }
+
+                    if (abortController.signal.aborted) break;
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log('Fetch was cancelled');
+                } else {
+                    console.error('Failed to fetch cars:', error);
+                }
+            } finally {
+                finishFetching();
+            }
+        }
+
+        function finishFetching() {
+            isFetching = false;
+            fetchButton.style.display = 'inline-block';
+            cancelButton.style.display = 'none';
+            abortController = null;
+            console.log(`Total cars fetched: ${allCars.length}`);
+            updatePageIndicator();
+        }
+
+        function displayCars() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const carsToDisplay = allCars.slice(startIndex, endIndex);
+
+            productTableBody.innerHTML = '';  // Clear existing rows
+            carsToDisplay.forEach(car => {
+                const row = document.createElement('tr');
+                const titleCell = document.createElement('td');
+                const priceCell = document.createElement('td');
+                const actionCell = document.createElement('td');
+                const link = document.createElement('a');
+
+                titleCell.textContent = car.title;
+                // Format the price
+                const formattedPrice = car.price.replace(/[€,.-]/g, '').trim() + ' €';
+                priceCell.textContent = formattedPrice;
+                link.href = car.url;
+                link.textContent = 'View Car';
+                link.target = '_blank';
+                actionCell.appendChild(link);
+
+                row.appendChild(titleCell);
+                row.appendChild(priceCell);
+                row.appendChild(actionCell);
+                productTableBody.appendChild(row);
+            });
+        }
+
+        function updatePageIndicator() {
+            pageIndicator.textContent = `Page ${currentPage} of ${totalPages} (Total cars: ${allCars.length})`;
+        }
+
+        fetchButton.addEventListener('click', () => fetchAllCars(true));
+        cancelButton.addEventListener('click', () => {
+            if (abortController) {
+                abortController.abort();
+                finishFetching();
+            }
+        });
+
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayCars();
+                updatePageIndicator();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayCars();
+                updatePageIndicator();
+            }
+        });
+
+        backButton.addEventListener('click', () => window.location.href = 'index.html');
+    </script>
+</body>
+</html>
