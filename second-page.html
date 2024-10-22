@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Second Page - Car List</title>
+    <title>AutoScout24 Scraper</title>
     <style>
         body {
             display: flex;
@@ -56,10 +56,17 @@
             align-items: center;
             margin-top: 20px;
         }
+        #exportButton {
+            margin-top: 10px;
+            background-color: #28a745;
+        }
+        #exportButton:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
-    <h1>Car List</h1>
+    <h1>AutoScout24 Car List</h1>
     <div class="search-section">
         <input type="text" id="carMake" placeholder="Enter car make">
         <input type="number" id="minPrice" placeholder="Min price (€)">
@@ -67,6 +74,7 @@
         <button id="fetchButton">Fetch Cars</button>
         <button id="cancelButton" style="display: none;">Cancel Fetch</button>
     </div>
+    <button id="exportButton" style="display: none;">Export to Excel</button>
     <table id="productTable">
         <thead>
             <tr>
@@ -101,6 +109,7 @@
         const nextButton = document.getElementById('nextButton');
         const pageIndicator = document.getElementById('pageIndicator');
         const productTableBody = document.querySelector('#productTable tbody');
+        const exportButton = document.getElementById('exportButton');
 
         async function fetchAllCars(isNewSearch = false) {
             if (isFetching) return;
@@ -157,6 +166,7 @@
             isFetching = false;
             fetchButton.style.display = 'inline-block';
             cancelButton.style.display = 'none';
+            exportButton.style.display = allCars.length > 0 ? 'inline-block' : 'none';
             abortController = null;
             console.log(`Total cars fetched: ${allCars.length}`);
             updatePageIndicator();
@@ -176,7 +186,6 @@
                 const link = document.createElement('a');
 
                 titleCell.textContent = car.title;
-                // Format the price
                 const formattedPrice = car.price.replace(/[€,.-]/g, '').trim() + ' €';
                 priceCell.textContent = formattedPrice;
                 link.href = car.url;
@@ -193,6 +202,21 @@
 
         function updatePageIndicator() {
             pageIndicator.textContent = `Page ${currentPage} of ${totalPages} (Total cars: ${allCars.length})`;
+        }
+
+        function exportToExcel() {
+            ipcRenderer.invoke('export-to-excel', allCars)
+                .then((result) => {
+                    if (result.success) {
+                        alert('Excel file exported successfully!');
+                    } else {
+                        alert('Failed to export Excel file. Please try again.');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error exporting to Excel:', error);
+                    alert('An error occurred while exporting to Excel.');
+                });
         }
 
         fetchButton.addEventListener('click', () => fetchAllCars(true));
@@ -218,6 +242,8 @@
                 updatePageIndicator();
             }
         });
+
+        exportButton.addEventListener('click', exportToExcel);
 
         backButton.addEventListener('click', () => window.location.href = 'index.html');
     </script>
