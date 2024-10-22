@@ -129,22 +129,25 @@
             const carMake = document.getElementById('carMake').value;
             const minPrice = document.getElementById('minPrice').value;
             const maxPrice = document.getElementById('maxPrice').value;
-            const query = `/lst/${carMake}?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&pricefrom=${minPrice}&priceto=${maxPrice}&search_id=1w1487tfnfp&sort=price&source=homepage_search-mask&ustate=N%2CU&limit=${itemsPerPage}`;
 
+            let fetchPage = 1;
             try {
-                while (currentPage <= totalPages || totalPages === 0) {
-                    const result = await ipcRenderer.invoke('fetch-cars', query, currentPage, abortController.signal);
+                while (fetchPage <= totalPages || totalPages === 0) {
+                    const result = await ipcRenderer.invoke('fetch-cars-coches', carMake, minPrice, maxPrice, fetchPage);
                     console.log("Received result:", result);
 
                     if (result && result.cars && Array.isArray(result.cars)) {
                         allCars = allCars.concat(result.cars);
                         totalPages = result.totalPages;
-                        currentPage = result.currentPage;
-                        displayCars();
+                        
+                        // Always display the first page
+                        if (fetchPage === 1) {
+                            displayCars();
+                        }
                         updatePageIndicator();
 
-                        if (currentPage >= totalPages) break;
-                        currentPage++;
+                        if (fetchPage >= totalPages) break;
+                        fetchPage++;
                     } else {
                         console.error('Cars data is missing, undefined, or not an array in the response:', result);
                         break;
