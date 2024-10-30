@@ -70,6 +70,17 @@
     <h1>Car List</h1>
     <div class="search-section">
         <input type="text" id="carMake" placeholder="Enter car make">
+        <select id="fuelType">
+            <option value="">All</option>
+            <option value="1">Diésel</option>
+            <option value="2">Gasolina</option>
+            <option value="3">Eléctrico</option>
+            <option value="4">Híbrido</option>
+            <option value="5">Híbrido Enchufable</option>
+            <option value="6">Gas Liquado</option>
+            <option value="7">Gas Natural</option>
+            <option value="8">Otros</option>
+        </select>
         <input type="number" id="minPrice" placeholder="Min price (€)">
         <input type="number" id="maxPrice" placeholder="Max price (€)">
         <button id="fetchButton">Fetch Cars</button>
@@ -127,13 +138,14 @@
             }
 
             const carMake = document.getElementById('carMake').value;
+            const fuelType = document.getElementById('fuelType').value;
             const minPrice = document.getElementById('minPrice').value;
             const maxPrice = document.getElementById('maxPrice').value;
 
             let fetchPage = 1;
             try {
                 while (fetchPage <= totalPages || totalPages === 0) {
-                    const result = await ipcRenderer.invoke('fetch-cars-coches', carMake, minPrice, maxPrice, fetchPage);
+                    const result = await ipcRenderer.invoke('fetch-cars-coches', carMake, minPrice, maxPrice, fetchPage, fuelType);
                     console.log("Received result:", result);
 
                     if (result && result.cars && Array.isArray(result.cars)) {

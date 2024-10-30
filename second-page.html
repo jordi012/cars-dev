@@ -69,6 +69,17 @@
     <h1>AutoScout24 Car List</h1>
     <div class="search-section">
         <input type="text" id="carMake" placeholder="Enter car make">
+        <select id="fuelType">
+            <option value="">All</option>
+            <option value="2">Electro/Gasolina</option>
+            <option value="3">Electro/Diésel</option>
+            <option value="D">Diésel</option>
+            <option value="E">Eléctrico</option>
+            <option value="H">Hidrógeno</option>
+            <option value="L">Gas licuado</option>
+            <option value="M">Etanol</option>
+            <option value="O">Otros</option>
+        </select>
         <input type="number" id="minPrice" placeholder="Min price (€)">
         <input type="number" id="maxPrice" placeholder="Max price (€)">
         <button id="fetchButton">Fetch Cars</button>
@@ -126,9 +137,14 @@
             }
 
             const carMake = document.getElementById('carMake').value;
+            const fuelType = document.getElementById('fuelType').value;
             const minPrice = document.getElementById('minPrice').value;
             const maxPrice = document.getElementById('maxPrice').value;
-            const query = `/lst/${carMake}?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&pricefrom=${minPrice}&priceto=${maxPrice}&search_id=1w1487tfnfp&sort=price&source=homepage_search-mask&ustate=N%2CU&limit=${itemsPerPage}`;
+            let query = `/lst/${carMake}?atype=C&cy=E&damaged_listing=exclude&desc=0&powertype=kw&pricefrom=${minPrice}&priceto=${maxPrice}&search_id=1w1487tfnfp&sort=price&source=homepage_search-mask&ustate=N%2CU&limit=${itemsPerPage}`;
+
+            if (fuelType) {
+                query += `&fuel=${fuelType}`;
+            }
 
             let fetchPage = 1;
             try {
